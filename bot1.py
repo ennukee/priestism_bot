@@ -149,7 +149,7 @@ def on_message(message):
 	elif message.content.startswith("!setwhois"):
 		params = message.content.split(' ')[1:]
 		user = (message.author.name if len(params)==0 else params[0])
-		if message.author.name != "enragednuke" and len(params)>0:
+		if message.author.name not in admins() and len(params)>0:
 			yield from client.send_message(message.channel, "Only my creator can set other peoples' profiles!")
 			user = message.author.name 
 		yield from client.send_message(message.channel, "Setting 'Who is?' profile for **{0}**\nPlease type your bio in the next sixty seconds (I recommend copy and pasting a pre-written one!)".format(user))
