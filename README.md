@@ -7,3 +7,20 @@ A bot designed solely for the purpose of my own Discord server. If you wish to u
  3. Repeat #2 for your 'General chat' for the bootup sequence
 
 I don't provide any technical support for this bot.
+
+Changelog
+```
+Update 0.3.3
+The 'Custom Commands & Administration' update
+
+ * added commands +cmd and -cmd to add and remove custom commands
+ * added ability to restrict commands (only command generation and bot affection are restricted) through an admin list (can add and remove via +admin and -admin, view all admins by using !admins)
+ * fixed file structure
+
+Update 0.2.4
+The 'Who is?' update
+
+* added !whois and !setwhois commands
+* removed the greeting spam on bot bootup
+* now tracks version and build number
+```
