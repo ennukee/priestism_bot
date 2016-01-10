@@ -4,11 +4,14 @@ import asyncio
 import random
 import codecs
 import datetime
+import os
 
 client = discord.Client()
 log_server = discord.Object(133761409929576449)
 main_server = discord.Object(126122560596213760)
 local_ilys = 0
+version = "0.3.3"
+subtitle = "Custom Commands & Administration"
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -16,27 +19,32 @@ local_ilys = 0
 
 @client.async_event
 def on_ready():
+	global version
+	build_up()
 	print('Logged in as')
 	print(client.user.name)
 	print(client.user.id)
-	print('------')
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/pbot_affection.txt", "r+")
-	data = fo.read()
-	dic = eval(data)
-	d_view = [ (v,k) for k,v in dic.items() ]
-	d_view.sort(reverse=True)
-	yield from client.send_message(main_server, "**Priestism Bot** booting up!\n")
-	yield from client.send_message(main_server, "Good morning, my creator enragednuke! :D")
-	for v,k in d_view[1:]:
-		if k in [x.name for x in client.get_all_members()]:
-			if v>1000:
-				yield from client.send_message(main_server, "I'm home, my waifu {0}".format(k))
-			elif v>700:
-				yield from client.send_message(main_server, "G-good morning, {0} (*slight blush*)".format(k))
-			elif v>400:
-				yield from client.send_message(main_server, "Hey there, {0}! What's up?".format(k))
-			elif v>=100:
-				yield from client.send_message(main_server, "Hello there, {0}!".format(k))
+	#d_view = [ (v,k) for k,v in dic.items() ]
+	#d_view.sort(reverse=True)
+	yield from client.send_message(main_server, "**Priestism Bot** booting up!\nVersion: *{0} Build {1}*\n*{2}*".format( version, str(builds()), subtitle ))
+
+def build_up():
+	num = builds()
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "w+")
+	fo.write(str(num+1))
+	fo.close()
+
+def builds():
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "r")
+	data = int(fo.read())
+	fo.close()
+	return data
+
+def admins():
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/admins.txt", "r")
+	data = fo.read().split('|')
+	fo.close()
+	return data
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -53,11 +61,11 @@ def on_message(message):
 
 	# MEMES #
 	if message.content == "BabyRage":
-		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/BabyRage.png")
+		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/imgs/BabyRage.png")
 	elif message.content == "KappaRoss":
-		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/KappaRoss.png")
+		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/imgs/KappaRoss.png")
 	elif message.content == "WutFace":
-		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/WutFace.png")
+		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/imgs/WutFace.png")
 
 	elif message.content.lower() == "priestism bot":
 		yield from client.send_message(message.channel, "Hello {0}".format(message.author.name))
@@ -74,10 +82,13 @@ def on_message(message):
 			yield from client.send_message(message.channel, {0: "No, I hate you", 1: "No, I'm sorry", 2: "Maybe (*blushes*)", 3: "Maybe (firmly)", 4: "Somewhat", 5: "Yes <3"}[random.randrange(5)+1])
 		elif i1.content.lower() == "how loved are you":
 			yield from client.send_message(message.channel, "Total: **{0}**\nThis boot-up: **{1}**".format(get_love_yous(), local_ilys))
+		else:
+			yield from client.send_message(message.channel, "BabyRage")
+			yield from client.send_message(message.channel, u"(わかりません, ごめんなさい！！)")
 
 	elif message.content.startswith('+PBOTaff'):
-		if message.author.name != "enragednuke":
-			yield from client.send_message(message.channel, "Can only be used by creator")
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "Can only be used by an admin")
 			return
 		params = message.content.split(' ')[1:]
 		if len(params)<1:
@@ -103,7 +114,12 @@ def on_message(message):
 	elif message.content.startswith('!channelid'):
 		yield from client.send_message(message.channel, str(message.channel.id))
 
-	#http://us.battle.net/wow/en/character/SARGERAS/Elfmchunter/advanced
+	elif message.content == "!tokens":
+		yield from client.send_message(message.channel, "**Vanquisher** - Rogue, Death Knight, Mage, Druid")
+		yield from client.send_message(message.channel, "**Conqueror** - Priest, Paladin, Warlock")
+		yield from client.send_message(message.channel, "**Protector** - Warrior, Hunter, Shaman, Monk\n")
+		yield from client.send_message(message.channel, "**Hellfire Citadel Tier Drops**\n**Head** - Kormrok\n**Shoulders** - Xhul'horac\n**Chest** - Mannoroth\n**Gloves** - Socrethar\n**Legs** - Gorefiend\n")
+
 	elif message.content.startswith('!armory'):
 		params = message.content.split(' ')[1:]
 		if len(params)<2:
@@ -111,11 +127,79 @@ def on_message(message):
 		else:
 			yield from client.send_message(message.channel, "http://us.battle.net/wow/en/character/{0}/{1}/advanced".format("-".join(params[1:]), params[0])) 
 
+	elif message.content.startswith('!twitch'):
+		params = message.content.split(' ')[1:]
+		if len(params)<1:
+			yield from client.send_message(message.channel, "Invalid parameters (required: name)")
+		else:
+			yield from client.send_message(message.channel, "http://www.twitch.tv/{0}".format(params[0])) 
+
+	elif message.content.startswith('!whois'):
+		params = message.content.split(' ')[1:]
+		try:
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/bios/{0}.txt".format(params[0]), "r")
+			data = fo.read()
+			yield from client.send_message(message.channel, "`{0}`'s data!\n".format(params[0])) 
+			yield from client.send_message(message.channel, data)
+		except IOError:
+			yield from client.send_message(message.channel, "That player does not have a 'Who is?' profile.")
+		except IndexError as e:
+			yield from client.send_message(message.channel, "Invalid paramaters (error: {0})".format(e))
+
+	elif message.content.startswith("!setwhois"):
+		params = message.content.split(' ')[1:]
+		user = (message.author.name if len(params)==0 else params[0])
+		if message.author.name != "enragednuke" and len(params)>0:
+			yield from client.send_message(message.channel, "Only my creator can set other peoples' profiles!")
+			user = message.author.name 
+		yield from client.send_message(message.channel, "Setting 'Who is?' profile for **{0}**\nPlease type your bio in the next sixty seconds (I recommend copy and pasting a pre-written one!)".format(user))
+		resp = yield from client.wait_for_message(timeout=60.0, author=message.author)
+		if resp is None:
+			yield from client.send_message(message.channel, "Time ran out!") 
+		else: 
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/bios/{0}.txt".format(user), "w+")
+			fo.write(resp.content)
+			yield from client.send_message(message.channel, "Successfully written to {0}'s 'Who is?' profile".format(user)) 
+
+	elif message.content.startswith('+admin'):
+		yield from client.send_message(message.channel, "Starting admin addition . . . ") 
+		params = message.content.split(' ')[1:]
+		name = ' '.join(params)
+		if len(params)==0:
+			yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 1)".format(len(params))) 
+			return
+		if name not in admins():
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/admins.txt", "a")
+			fo.write("|{0}".format(name))
+			yield from client.send_message(message.channel, "User {0} successfully added to admin list".format(name))
+		else:
+			yield from client.send_message(message.channel, "User {0} is already an admin".format(name))
+
+	elif message.content.startswith('-admin'):
+		yield from client.send_message(message.channel, "Starting admin removal . . . ") 
+		params = message.content.split(' ')[1:]
+		name = ' '.join(params)
+		if len(params)==0:
+			yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 1)".format(len(params))) 
+			return
+		if name in admins():
+			a1 = admins()
+			a1.remove(name)
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/admins.txt", "w+")
+			fo.write('|'.join(a1))
+			yield from client.send_message(message.channel, "User {0} successfully removed from admin list".format(name))
+		else:
+			yield from client.send_message(message.channel, "User {0} is not an admin".format(name))
+
+	elif message.content == "!admins":
+		yield from client.send_message(message.channel, "**Current Priestism Bot Admin List**")
+		yield from client.send_message(message.channel, '\n'.join(admins()))
+
 	# GAMES #
 	elif message.content.startswith('!game'):
 		params = message.content.split(' ')[1:]
 		if len(params)==0:
-			yield from client.send_message("Invalid game parameters") 
+			yield from client.send_message(message.channel, "Invalid game parameters") 
 		#elif (params[0]=="jp" or params[0]=="japanese"):
 			#fo = codecs.open('C:/Users/Dylan/Documents/discord botts/test1/jpc_all.txt', encoding='utf-8')
 			#fo = open("C:/Users/Dylan/Documents/discord botts/test1/jpc_all.txt", "r+")
@@ -161,7 +245,7 @@ def on_message(message):
 					return
 				elif params[1] == "leaderboard":
 					# LEADERBOARD #
-					fo = open("C:/Users/Dylan/Documents/discord botts/test1/guessgame.txt", "r+")
+					fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/guessgame.txt", "r+")
 					data = fo.read()
 					dic = eval(data)
 					fo.close()
@@ -182,7 +266,7 @@ def on_message(message):
 				elif guess.content == str(answer):
 					yield from client.send_message(message.channel, "**Correct!**")
 					# LEADERBOARD #
-					fo = open("C:/Users/Dylan/Documents/discord botts/test1/guessgame.txt", "r+")
+					fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/guessgame.txt", "r+")
 					data = fo.read()
 					fo.close()
 					dic = eval(data)
@@ -190,7 +274,7 @@ def on_message(message):
 						dic[message.author.name] = int(dic[message.author.name]) + i
 					else:
 						dic[message.author.name] = i
-					fo = open("C:/Users/Dylan/Documents/discord botts/test1/guessgame.txt", "r+")
+					fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/guessgame.txt", "r+")
 					fo.truncate()
 					fo.write(str(dic))
 					fo.close()
@@ -203,6 +287,57 @@ def on_message(message):
 					# LEADERBOARD #
 				else:
 					yield from client.send_message(message.channel, "**Incorrect!** The correct answer was {0}".format(answer))
+
+	elif message.content.startswith('+cmd'):
+		yield from client.send_message(message.channel, "Command generation starting . . .")
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "You are not authorized for command generation")
+			return
+
+		params = message.content.split(' ')[1:]
+		try:
+			cmd = params[0]
+			content = params[1:]
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/cmds/{0}.txt".format(cmd), "w+")
+			fo.write(' '.join(content))
+			yield from client.send_message(message.channel, "Successfully made command: !{0}".format(cmd))
+		except IOError:
+			yield from client.send_message(message.channel, "Error generating or reading from file")
+		except IndexError:
+			yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 2)".format(len(params)))
+		except Exception as e:
+			yield from client.send_message(message.channel, "An unexpected error occured.\nError: *{0}*".format(e))
+
+	elif message.content.startswith('-cmd'):
+		yield from client.send_message(message.channel, "Command removal starting . . .")
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "You are not authorized for command removal")
+			return
+
+		params = message.content.split(' ')[1:]
+		if len(params)==0 or len(params)>1:
+			yield from client.send_message(message.channel, "Invalid parameter count ({0} for 1)".format(len(params)))
+			return
+		try:
+			fo = os.remove("C:/Users/Dylan/Documents/discord botts/test1/cmds/{0}.txt".format(params[0]))
+			yield from client.send_message(message.channel, "Successfully removed command: !{0}".format(params[0]))
+		except IOError:
+			yield from client.send_message(message.channel, "Error generating or reading from file")
+		except Exception as e:
+			yield from client.send_message(message.channel, "An unexpected error occured.\nError: *{0}*".format(e))
+
+	elif message.content.startswith('!'):
+		command = message.content[1:]
+		try:
+			fo = open("C:/Users/Dylan/Documents/discord botts/test1/cmds/{0}.txt".format(command), "r")
+			data = fo.read()
+			output = data.split("[ENDL]")
+			for v in output:
+				yield from client.send_message(message.channel, v)
+		except IOError:
+			yield from client.send_message(message.channel, "Invalid command !{0}".format(command))
+			yield from client.send_message(message.channel, "BabyRage")
+
 
 
 @client.async_event
@@ -247,7 +382,7 @@ def clog(name, user, id):
 	print("Command {0} used by {1} (ID: {2})".format(name, user, str(id)))
 
 def pbot_affection(name, value):
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/pbot_affection.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/pbot_affection.txt", "r+")
 	data = fo.read()
 	fo.close()
 	dic = eval(data)
@@ -255,13 +390,13 @@ def pbot_affection(name, value):
 		dic[name] = dic[name] + value
 	else:
 		dic[name] = value
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/pbot_affection.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/pbot_affection.txt", "r+")
 	fo.truncate()
 	fo.write(str(dic))
 	fo.close()
 
 def get_pbot_affection(name):
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/pbot_affection.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/pbot_affection.txt", "r+")
 	data = fo.read()
 	fo.close()
 	dic = eval(data)
@@ -271,19 +406,21 @@ def get_pbot_affection(name):
 		return "Who?"
 
 def love_yous(i):
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/i-love-yous.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/i-love-yous.txt", "r+")
 	data = int(fo.read())
 	fo.close()
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/i-love-yous.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/i-love-yous.txt", "r+")
 	fo.truncate()
 	fo.write(str(data+i))
 	fo.close()
 
 def get_love_yous():
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/i-love-yous.txt", "r+")
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/i-love-yous.txt", "r+")
 	data = int(fo.read())
 	fo.close()
 	return data
+
+
 
  # # # LOGIN # # #
 

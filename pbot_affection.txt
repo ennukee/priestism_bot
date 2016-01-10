@@ -1,1 +1,0 @@
-{'Tally': 525, 'enragednuke': 1000825, 'WingusBrain': 100, 'MarioMaster2': 100}
