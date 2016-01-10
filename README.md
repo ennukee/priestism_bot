@@ -8,7 +8,52 @@ A bot designed solely for the purpose of my own Discord server. If you wish to u
 
 I don't provide any technical support for this bot.
 
-Changelog
+# Priestism Bot Command Info
+(only includes commands usable by the general users, parse the source code for the admin restricted commands)
+
+Commands:
+```python
+!name
+!id
+!serverid
+
+!armory CHARACTER_NAME REALM_NAME (include spaces)
+!twitch TWITCH_CHANNEL_NAME
+!tokens
+
+KappaRoss
+WutFace
+BabyRage
+
+!whois NAME
+!setwhois 
+# note, the above will prompt you for your bio, don't include in the name
+
+!game guess X # guessing game from 0 to X
+!game guess rules
+!game guess leaderboard
+
+!game math number_of_values [max_value, timeout]
+e.g. !game math 3 20 10
+```
+
+For the math game,
+!game math 3 could return `3*3-2` and !game math 4 could return `4-2+3*1`
+max_value will change the default max of the values of 9 in the equation to whatever you set it to
+timeout will change the default solving timeout of 10s to whatever you specify
+
+You can also talk with Priestism Bot by typing 'Priestism Bot' then saying one of these commands:
+```
+How are you
+Do you love me
+I love you
+How loved are you
+```
+
+Known bugs:
+ * Only logs edits/deletes if the message was created during the bot's current session
+
+# Changelog
 ```
 Update 0.3.3
 The 'Custom Commands & Administration' update
