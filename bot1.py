@@ -10,7 +10,7 @@ client = discord.Client()
 log_server = discord.Object(133761409929576449)
 main_server = discord.Object(126122560596213760)
 local_ilys = 0
-version = "0.3.3"
+version = "0.3.3a"
 subtitle = "Custom Commands & Administration"
 
 
@@ -293,7 +293,6 @@ def on_message(message):
 		if message.author.name not in admins():
 			yield from client.send_message(message.channel, "You are not authorized for command generation")
 			return
-
 		params = message.content.split(' ')[1:]
 		try:
 			cmd = params[0]
@@ -313,7 +312,6 @@ def on_message(message):
 		if message.author.name not in admins():
 			yield from client.send_message(message.channel, "You are not authorized for command removal")
 			return
-
 		params = message.content.split(' ')[1:]
 		if len(params)==0 or len(params)>1:
 			yield from client.send_message(message.channel, "Invalid parameter count ({0} for 1)".format(len(params)))
@@ -325,6 +323,10 @@ def on_message(message):
 			yield from client.send_message(message.channel, "Error generating or reading from file")
 		except Exception as e:
 			yield from client.send_message(message.channel, "An unexpected error occured.\nError: *{0}*".format(e))
+
+	elif message.content == "!cmds":
+		c1 = ["!"+x[:len(x)-4] for x in os.listdir("C:/Users/Dylan/Documents/discord botts/test1/cmds/")]
+		yield from client.send_message(message.channel, "**Custom Command List**\n```{0}```".format('\n'.join(c1)))
 
 	elif message.content.startswith('!'):
 		command = message.content[1:]
