@@ -1,14 +1,14 @@
 # Priestism Bot
 
-A bot designed solely for the purpose of my own Discord server. If you wish to use this, there will be a lot of things you'll need to modify.
+A bot designed solely for the purpose of my own Discord server. If you wish to use this, there will be a **lot** of things you'll need to modify.
 
-The first versions of this bot (up to 0.3.X or so) was created within a few days of learning Python. There may be inefficient code here, but as I learn the language more, I plan to fix the inefficiencies and further improve my code in the future.
+The first versions of this bot (up to 0.3.X or so) was created within a few days of learning Python. There may be inefficient code here, but as I learn the language more, I plan to fix the inefficiencies and further improve my code in the future. Some of the basic stuff you must do are as following:
 
  1. Log-in info. Create a 'login.txt' file and put the email first, followed by a space, then the password (note: password cannot have any spaces)
  2. Create a 'server log' text channel. Go into and use the '!channelid' command to find the ID. Replace the existing number (at the top of the python file) with the server log ID.
  3. Repeat #2 for your 'General chat' for the bootup sequence
 
-I don't provide any technical support for this bot.
+I don't provide any technical support for this bot. There's far too much that is hardcoded for it to easily work on anyone's system. If you know what you're doing, you can probably get it working. It probably isn't worth the time otherwise though.
 
 # Priestism Bot Command Info
 (only includes commands usable by the general users, parse the source code for the admin restricted commands)
@@ -55,6 +55,15 @@ How loved are you
 Known bugs:
  * Only logs edits/deletes if the message was created during the bot's current session
 
+# TO-DO
+```
+ TODO:
+ * finish !mmo explore
+ * add !mmo crafting
+ * add !mmo delete
+ * update current command syntax to the new format supported by 0.10.0 (from the 0.9.1 used now)
+ ```
+
 # Changelog
 ```
 Update 0.4.2 (beta)
@@ -63,12 +72,6 @@ Update 0.4.2 (beta)
  * added backpack integration
  * added item discovery in !mmo explore (10% chance)
  * added !mmo backpack to view your backpack
-
- TODO:
- * finish !mmo explore
- * add !mmo crafting
- * add !mmo delete
- * update current command syntax to the new format supported by 0.10.0 (from the 0.9.1 used now)
 
 Update 0.4.1 (beta)
 "The Not-Actually-A-MMO-Update Update"
