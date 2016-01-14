@@ -57,6 +57,43 @@ Known bugs:
 
 # Changelog
 ```
+Update 0.4.2 (beta)
+"Actual MMO Update!"
+
+ * added backpack integration
+ * added item discovery in !mmo explore (10% chance)
+ * added !mmo backpack to view your backpack
+
+ TODO:
+ * finish !mmo explore
+ * add !mmo crafting
+ * add !mmo delete
+ * update current command syntax to the new format supported by 0.10.0 (from the 0.9.1 used now)
+
+Update 0.4.1 (beta)
+"The Not-Actually-A-MMO-Update Update"
+
+ * added the !avatar command
+ * view anyone's avatar by typing !avatar followed by their name (i.e. !avatar enragednuke) or view everyone's avatar by typing !avatars (disable this in large servers)
+ * added the !mal command
+ * generate a link to anyone's MAL profile or list by typing the !mal command followed by their MAL name (if linking to list, type !mal list THEN their name, so for example !mal list enragednuke)
+
+Update 0.4.0a (beta)
+
+ * added a !eval command
+ * type any mathematical equation following !eval and Priestism Bot will do it for you (it actually runs any valid python code) but due to how much it can breach security of the code, it's restricted to admin-level access only
+
+Update 0.4.0 (beta)
+"The start of the 'PriestMMO' updates"
+
+ * Added the new !mmo command
+ * The following commands are valid: !mmo create, !mmo stats PLAYERNAME (you can do just !mmo stats to view your own stats), and !mmo explore
+ * !mmo explore is currently not implemented
+
+Update 0.3.3a
+
+ * Added !cmds command to view a list of all custom-made commands
+
 Update 0.3.3
 The 'Custom Commands & Administration' update
 
