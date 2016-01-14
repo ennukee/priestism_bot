@@ -10,8 +10,8 @@ client = discord.Client()
 log_server = discord.Object(133761409929576449)
 main_server = discord.Object(126122560596213760)
 local_ilys = 0
-version = "0.3.3a"
-subtitle = "Custom Commands & Administration"
+version = "0.4.2 (beta)"
+subtitle = "The PriestMMO Update (Beta)"
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -120,6 +120,30 @@ def on_message(message):
 		yield from client.send_message(message.channel, "**Protector** - Warrior, Hunter, Shaman, Monk\n")
 		yield from client.send_message(message.channel, "**Hellfire Citadel Tier Drops**\n**Head** - Kormrok\n**Shoulders** - Xhul'horac\n**Chest** - Mannoroth\n**Gloves** - Socrethar\n**Legs** - Gorefiend\n")
 
+	elif message.content.startswith('!avatar'):
+		params = message.content.split(' ')[1:]
+		if message.content == '!avatars':
+			for msg in ["**{0}**'s avatar: `{1}`".format(x.name, x.avatar_url) for x in client.servers[0].members]:
+				yield from client.send_message(message.channel, msg)
+		elif len(params)==0:
+			yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 1)\nUse `!avatars` to view all avatars".format(len(params))) 
+		else:
+			if ' '.join(params).lower() not in [x.name.lower() for x in client.servers[0].members]:
+				yield from client.send_message(message.channel, "{0} is not a valid member of the server".format(' '.join(params)))
+			else:
+				for msg in ["**{0}**'s avatar: {1}".format(x.name, x.avatar_url) if x.name.lower()==' '.join(params).lower() else None for x in client.servers[0].members]:
+					if msg != None:
+						yield from client.send_message(message.channel, msg)
+
+	elif message.content.startswith('!mal'):
+		params = message.content.split(' ')[1:]
+		if len(params)>0 and params[0]=='list':
+			name = message.author.name if len(params)==1 else params[1]
+			yield from client.send_message(message.channel, "http://myanimelist.net/animelist/{0}".format(name))
+		else:
+			name = message.author.name if len(params)==0 else params[0]
+			yield from client.send_message(message.channel, "http://myanimelist.net/profile/{0}".format(name))
+
 	elif message.content.startswith('!armory'):
 		params = message.content.split(' ')[1:]
 		if len(params)<2:
@@ -136,6 +160,9 @@ def on_message(message):
 
 	elif message.content.startswith('!whois'):
 		params = message.content.split(' ')[1:]
+		if ' '.join(params)=="Priestism Bot":
+			yield from client.send_message(message.channel, "Hey there, my name is **Priestism Bot**! My other name is **Airi Katagiri**. I'm a 19 year old grill who loves cooking assorted meats. I serve my lord and savior enragednuke-sama.") 
+			return
 		try:
 			fo = open("C:/Users/Dylan/Documents/discord botts/test1/bios/{0}.txt".format(params[0]), "r")
 			data = fo.read()
@@ -195,28 +222,119 @@ def on_message(message):
 		yield from client.send_message(message.channel, "**Current Priestism Bot Admin List**")
 		yield from client.send_message(message.channel, '\n'.join(admins()))
 
+	# It is very important you don't let these two (eval and exec) commands be freely used. If someone knows what they're doing,
+	# they can mess with your computer fairly easily using these commands
+	elif message.content.startswith('!eval'):
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "You are not authorized to use this command")
+			return
+		try:
+			params = ' '.join(message.content.split(' ')[1:])
+			yield from client.send_message(message.channel, "Evaluating `{0}`".format(params))
+			yield from client.send_message(message.channel, "Result: `{0}`".format(eval(params)))
+		except Exception as e:
+			yield from client.send_message(message.channel, "An unexpected error occured!\n```\n{0}\n```".format(e))
+
+	elif message.content.startswith('!exec'):
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "You are not authorized to use this command")
+			return
+		try:
+			params = ' '.join(message.content.split(' ')[1:])
+			yield from client.send_message(message.channel, "Evaluating `{0}`".format(params))
+			yield from client.send_message(message.channel, "Result: `{0}`".format(exec(params)))
+		except Exception as e:
+			yield from client.send_message(message.channel, "An unexpected error occured!\n```\n{0}\n```".format(e))
+
+	# MMO UPDATE #
+	elif message.content.startswith('!mmo'):
+		# FILE STRUCTURE #
+		# name, class, level, maxhp, maxmana, curhp, curmana, str, int, agi
+		params = message.content.split(' ')[1:]
+		classes = {0: 'Priest', 1: 'Warrior', 2: 'Wizard', 3: 'Archer', 4: 'Knight'}
+		players = [x[:len(x)-4] for x in os.listdir("C:/Users/Dylan/Documents/discord botts/test1/mmo/")]
+
+		if params[0]=='create':
+			if len(params)<2:
+				yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 2)".format(len(params)))
+			elif message.author.name in players:
+				yield from client.send_message(message.channel, "You already have a PriestMMO character!")
+			else:
+				try:
+					stats = ""
+					yield from client.send_message(message.channel, "**PriestMMO Character Creation**")
+					yield from client.send_message(message.channel, "What class would you like to be?\n*Priest* - +1 hp, +1 int, +1 mana\n*Warrior* - +1 hp, +2 str\n*Wizard* - +2 int, +1 mana\n*Archer* - +1 hp, +2 agi\n*Knight* - +2 hp, +1 str")
+					response = yield from client.wait_for_message(timeout=15.0, author=message.author)
+					if response is None:
+						yield from client.send_message(message.channel, "Time has run out, character creation cancelled.")
+					elif response.content.lower() == 'priest':
+						stats = "06\n2\n6\n2\n1\n2\n1"
+					elif response.content.lower() == 'warrior':
+						stats = "16\n1\n6\n1\n3\n1\n1"
+					elif response.content.lower() == 'wizard':
+						stats = "25\n2\n5\n2\n1\n3\n1"
+					elif response.content.lower() == 'archer':
+						stats = "36\n1\n6\n1\n1\n1\n3"
+					elif response.content.lower() == 'knight':
+						stats = "46\n1\n6\n1\n2\n1\n1"
+					with open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(message.author.name), "w+") as f:
+						f.write("{0}\n{1}\n1\n{2}".format(' '.join(params[1:]), stats[0], stats[1:])+"\n{}")
+					yield from client.send_message(message.channel, "Character {0} has been created!".format(params[1]))
+				except Exception as e:
+					yield from client.send_message(message.channel, "Something went wrong with character creation. My apologies.\n\nError: {0}".format(e))
+		elif params[0]=='stats':
+			if len(params)==0:
+				yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 1)".format(len(params)))
+			name = (message.author.name if len(params)==1 else ' '.join(params[1:]))
+			try:
+				classes = lambda x: {0: 'Priest', 1: 'Warrior', 2: 'Wizard', 3: 'Archer', 4: 'Knight'}[x]
+				data = [(l[:-1] if '\n' in l else l) for l in open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(name))]
+				print(data)
+				yield from client.send_message( message.channel, "Viewing stats for {0}'s character, **{1}**".format(name, data[0]) )
+				yield from client.send_message( message.channel, "Level {0} {1}\nHP: {2}/{3}\nMana: {4}/{5}\nStrength: {6}\nIntellect: {7}\nAgility: {8}\nType `!mmo backpack` to view your backpack".format( data[2], classes(int(data[1])), data[3], data[5], data[4], data[6], data[7], data[8], data[9] ) )
+			except (FileNotFoundError, IOError):
+				yield from client.send_message(message.channel, "That player does not have a PriestMMO character")
+			except Exception as e:
+				yield from client.send_message(message.channel, "An unknown error occurred when viewing that player's PriestMMO stats\n\nError: {0}".format(e))
+		elif params[0]=='backpack':
+			with open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(message.author.name)) as f:
+				player_db = eval(f.readlines()[-1])
+				item_db = item_database()
+				yield from client.send_message(message.channel, "**{0}**'s Backpack".format(message.author.name))
+				for item in player_db:
+					yield from client.send_message(message.channel, "{0}x **{1}**".format(player_db[item], item_db[item][0]))
+		elif params[0]=='explore':
+			stats = pbot_mmo_stats(message.author.name)
+			player_level = int(stats[2])
+			r = random.randrange(100)+1 #time for some standard game RNGesus
+			if r>0 and r<=20:
+				yield from client.send_message(message.channel, "(fighting stuff)")
+			elif r>20 and r<=30:
+				items = item_database()
+				print(list(range((player_level-1)*5+1, player_level*5+1)))
+				valid_items = [(x, items[x]) for x in items if player_level in range((items[x][1]-1)*5+1, items[x][1]*5+1)]
+				i = random.choice(valid_items)
+				yield from client.send_message(message.channel, "You found a {0}{1}!".format(i[1][0], "" if message.author.name not in admins() else " (ID: {})".format(i[0])))
+				pbot_mmo_update_bags(message.author.name, i[0], 1)
+			elif r>30 and r<=97:
+				#nothing!
+				yield from client.send_message(message.channel, "(nothing of importance happened)")
+			elif r==98:
+				#+1 str
+				yield from client.send_message(message.channel, "(found a tome of ancient blade augment)")
+			elif r==99:
+				#+1 agi
+				yield from client.send_message(message.channel, "(found a tome of ancient archery augment)")
+			elif r==100:
+				#+1 int
+				yield from client.send_message(message.channel, "(found a tome of ancient magicks)")
+
+
 	# GAMES #
 	elif message.content.startswith('!game'):
 		params = message.content.split(' ')[1:]
 		if len(params)==0:
 			yield from client.send_message(message.channel, "Invalid game parameters") 
-		#elif (params[0]=="jp" or params[0]=="japanese"):
-			#fo = codecs.open('C:/Users/Dylan/Documents/discord botts/test1/jpc_all.txt', encoding='utf-8')
-			#fo = open("C:/Users/Dylan/Documents/discord botts/test1/jpc_all.txt", "r+")
-			#fo = u"na な ni　に nu　ぬ ne　ね no　の sa　さ shi　し su　す se　せ so　そ ta　た chi　ち tsu　つ te　て to　と ka　か ki　き ku　く ke　け ko　こ a　あ i　い u　う e　え o　お ha　は hi　ひ hu　ふ he　へ ho　ほ ma　ま mi　み mu　む me　め mo　も ya　や yu　ゆ yo　よ ra　ら ri　り ru　る re　れ ro　ろ wa　わ wo　を　na　ナ ni　ニ nu　ヌ ne　ネ no　ノ sa　サ shi　シ su　ス se　セ so　ソ ta　タ chi　チ tsu　ツ te　テ to　ト ka　カ ki　キ ku　ク ke　ケ ko　コ a　ア i　イ u　ウ e　エ o　オ ha　ハ hi　ヒ hu　フ he　ヘ ho　ホ ma　マ mi　ミ mu　ム me　メ mo　ニ ya　ヤ yu　ユ yo　ヨ ra　ラ ri　リ ru　ル re　レ ro　ロ wa　ワ wo　ヲ".encode('utf8')
-			#data = str(fo).split(' ')
-			#d = dict(zip(data[0::2], data[1::2]))
-			#val = random.choice(list(d.keys()))
-			#print(val)
-			#yield from client.send_message(message.channel, "**Japanese Character Recognition Game**\nPlayer: {0}".format(message.author.name))
-			#yield from client.send_message(message.channel, u"Character: {0}".format( d[val] ) )
-			#guess = client.wait_for_message(timeout=5.0, author=message.author)
-			#if guess is None:
-			#	yield from client.send_message(message.channel, "Time has run out, answer was {0}".format(val))
-			#elif guess == val:
-			#	yield from client.send_message(message.channel, "**Correct!**")
-			#else:
-			#	yield from client.send_message(message.channel, "**Incorrect!** The answer was {0}".format(val))
 		elif params[0]=="math":
 			if len(params)>4:
 				yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 1)".format(len(params)-1))
@@ -301,7 +419,7 @@ def on_message(message):
 			fo.write(' '.join(content))
 			yield from client.send_message(message.channel, "Successfully made command: !{0}".format(cmd))
 		except IOError:
-			yield from client.send_message(message.channel, "Error generating or reading from file")
+			yield from client.send_message(message.channel, "Error finding the file")
 		except IndexError:
 			yield from client.send_message(message.channel, "Invalid number of parameters ({0} for 2)".format(len(params)))
 		except Exception as e:
@@ -422,7 +540,25 @@ def get_love_yous():
 	fo.close()
 	return data
 
+def pbot_mmo_stats(name):
+	return [(l[:-1] if ('\n' in l) else l) for l in open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(name)).readlines()]
 
+def pbot_mmo_update_bags(name, item_id, amt):
+	cur = pbot_mmo_stats(name)
+	with open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(name), "w+") as f:
+		print(cur)
+		print(len(cur))
+		player_bags = eval(cur[-1])
+		if item_id in player_bags:
+			player_bags[item_id] += amt
+		else:
+			player_bags[item_id] = amt
+		cur = cur[:-1] + [player_bags]
+		f.write('\n'.join([str(x) for x in cur]))
+
+def item_database():
+	with open("C:/Users/Dylan/Documents/discord botts/test1/mmo/db/itemDB.db") as f:
+		return eval(f.read())
 
  # # # LOGIN # # #
 
