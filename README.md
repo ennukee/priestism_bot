@@ -52,6 +52,14 @@ BabyRage
 !game math number_of_values [max_value, timeout]
 e.g. !game math 3 20 10
 ```
+
+For the math game,
+!game math 3 could return `3*3-2` and !game math 4 could return `4-2+3*1`
+max_value will change the default max of the values of 9 in the equation to whatever you set it to
+timeout will change the default solving timeout of 10s to whatever you specify
+
+You can also talk with Priestism Bot by typing 'Priestism Bot' then saying one of these commands:
+```
 How are you
 Do you love me
 I love you
