@@ -1,1 +1,1 @@
-{'MarioMaster2': 100, 'enragednuke': 1001125, 'WingusBrain': 225, 'Tally': 525}
+{'Tally': 525, 'MarioMaster2': 100, 'enragednuke': 1001425, 'WingusBrain': 225}

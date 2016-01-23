@@ -5,14 +5,32 @@ import random
 import codecs
 import datetime
 import os
+import sys
+import requests
+import youtube_dl
+import json,requests
 
 client = discord.Client()
 log_server = discord.Object(133761409929576449)
 main_server = discord.Object(126122560596213760)
 local_ilys = 0
-version = "0.4.2 (beta)"
-subtitle = "The PriestMMO Update (Beta)"
+version = "0.4.6"
+subtitle = "osu! API and !addgame"
 
+class MyLogger(object):
+    def debug(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        print(msg)
+
+
+def my_hook(d):
+	if d['status'] == 'finished':
+		print('Done downloading, now converting ...')
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # ON_READY EVENT #
@@ -24,32 +42,15 @@ def on_ready():
 	print('Logged in as')
 	print(client.user.name)
 	print(client.user.id)
-	#d_view = [ (v,k) for k,v in dic.items() ]
-	#d_view.sort(reverse=True)
-	yield from client.send_message(main_server, "**Priestism Bot** booting up!\nVersion: *{0} Build {1}*\n*{2}*".format( version, str(builds()), subtitle ))
-
-def build_up():
-	num = builds()
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "w+")
-	fo.write(str(num+1))
-	fo.close()
-
-def builds():
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "r")
-	data = int(fo.read())
-	fo.close()
-	return data
-
-def admins():
-	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/admins.txt", "r")
-	data = fo.read().split('|')
-	fo.close()
-	return data
+	yield from client.send_message(main_server, "**Priestism Bot** booting up!\nVersion: *{0} Build {1}*\n*{2}*\n\nSee #priestism_bot_info for changelog details".format( version, str(builds()), subtitle ))
+	if not discord.opus.is_loaded():
+	    discord.opus.load_opus("C:/Users/Dylan/Documents/discord botts/test1/data/opus.dll")
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 @client.async_event
 def on_message(message):
+	os.chdir("C:/Users/Dylan/Documents/discord botts/test1/")
 	global local_ilys
 	# TROLL ALEX #
 	if str(message.author) == "Spaceman659":
@@ -66,6 +67,45 @@ def on_message(message):
 		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/imgs/KappaRoss.png")
 	elif message.content == "WutFace":
 		yield from client.send_file(message.channel, "C:/Users/Dylan/Documents/discord botts/test1/imgs/WutFace.png")
+
+	elif message.content.startswith("!join"):
+		if client.is_voice_connected():
+			yield from client.send_message(message.channel, 'Already connected to a voice channel')
+		channel_name = message.content[5:].strip()
+		check = lambda c: c.name == channel_name and c.type == discord.ChannelType.voice
+
+		channel = discord.utils.find(check, message.server.channels)
+		if channel is None:
+			yield from client.send_message(message.channel, 'Cannot find a voice channel by that name.')
+
+		yield from client.join_voice_channel(channel)
+	elif message.content == "!leave":
+		yield from client.voice.disconnect()
+	elif message.content.startswith('!play'):
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, 'You are not authorized to do that.')
+			return
+		os.chdir("C:/Users/Dylan/Documents/discord botts/test1/music")
+		params = message.content.split(' ')[1:]
+		if len(params) != 1:
+			return
+		ydl_opts = {
+			'format': 'bestaudio/best',
+			'postprocessors': [{
+				'key': 'FFmpegExtractAudio',
+				'preferredcodec': 'mp3',
+				'preferredquality': '192',
+			}],
+			'logger': MyLogger(),
+			'progress_hooks': [my_hook],
+			'outtmpl': 'music.%(ext)s'
+		}
+		with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+		   	ydl.download(["http://www.youtube.com/watch?v={0}".format(params[0])])
+		print(os.listdir('./'))
+		player = client.voice.create_ffmpeg_player(os.listdir('./')[0])
+		player.start()
+
 
 	elif message.content.lower() == "priestism bot":
 		yield from client.send_message(message.channel, "Hello {0}".format(message.author.name))
@@ -113,6 +153,165 @@ def on_message(message):
 		clog("!id", message.author.name, message.author.id)
 	elif message.content.startswith('!channelid'):
 		yield from client.send_message(message.channel, str(message.channel.id))
+
+	elif message.content.startswith('!say'):
+		yield from client.delete_message(message)
+		params = message.content.split(' ')[1:]
+		yield from client.send_message(message.channel, ' '.join(params))
+
+	elif message.content.startswith('!reload'):
+		if message.author.name not in admins():
+			yield from client.send_message(message.channel, "no")
+			return
+		os.system("\"C:/Users/Dylan/Documents/discord botts/test1/bot1.py\"")
+		sys.exit()
+
+	elif message.content.startswith('!osu'):
+		params = message.content.split(' ')[1:]
+		# https://osu.ppy.sh/api/
+		if(params[0]=='user'):
+			if len(params)<2:
+				yield from client.send_message(message.channel, "'user' requires a name parameter (only)")
+				return
+			name_input = params[1]
+			yield from client.send_message(message.channel, "Searching for user **{0}** in osu database...".format(params[1]))
+			data = yield from get_osu_user_info(name_input)
+			yield from client.send_message(message.channel, "**osu!** information for **{0}**\n".format( name_input ))
+			to_r = ["Level {0}".format("{0:,.2f}".format(float(data['level']))),
+					"Accuracy: {0}%".format("{0:,.2f}".format(float(data['accuracy']))),
+					"Bubble Count\n **300**: {0}, **100**: {1}, **50**: {2}".format(data['count300'], data['count100'], data['count50']),
+					"Beatmap Plays: {0} (only ranked and approved maps)".format(data['playcount']),
+					"Total osu! Score: {0} (Ranked only: {1})".format("{0:,.0f}".format(int(data['total_score'])), "{0:,.0f}".format(int(data['ranked_score']))),
+					"Ranking: **#{0}** w/ {1}pp ({2} #{3})".format(data['pp_rank'], data['pp_raw'], data['country'], data['pp_country_rank']),
+					"High Ranks\n **{0}** SS, **{1}** S, **{2}** A".format(data['count_rank_ss'], data['count_rank_s'], data['count_rank_a'])
+			]
+			for to_msg in to_r:
+				yield from client.send_message(message.channel, to_msg)
+		elif(params[0]=='compare'):
+			if len(params)<3:
+				yield from client.send_message(message.channel, "'compare' requires two name parameters")
+				return
+			name1 = params[1]
+			name2 = params[2]
+			yield from client.send_message(message.channel, "Searching for users **{0}** and **{1}** in osu database...".format(name1, name2))
+			data1 = yield from get_osu_user_info(name1)
+			data2 = yield from get_osu_user_info(name2)
+			yield from client.send_message(message.channel, "For **{0}**, there is a...".format(name1))
+			to_r = ["{0} Level Difference".format( "{0:+.2f}".format(float(data1['level']) - float(data2['level'])) ),
+					"{0}% Accuracy".format( "{0:+.2f}".format( float(data1['accuracy']) - float(data2['accuracy']) ) ),
+					"Beatmap Plays Difference: {0}".format( "{0:+,.2f}".format( float(data1['playcount']) - float(data2['playcount']) ) ),
+					"Ranking: **{0}** (#{1} vs #{2})".format( "{0:+,.2f}".format( float(data2['pp_rank']) - float(data1['pp_rank']) ), data1['pp_rank'], data2['pp_rank'] ),
+					"pp count: **{0}** ({1} vs {2})".format( "{0:+,.2f}".format( float(data1['pp_raw']) - float(data2['pp_raw']) ), data1['pp_raw'], data2['pp_raw'] ),
+					"High Ranks\n **{0}** SS, **{1}** S, **{2}** A".format( "{0:+,.0f}".format(int(data1['count_rank_ss']) - int(data2['count_rank_ss'])), "{0:+,.0f}".format(int(data1['count_rank_s']) - int(data2['count_rank_s'])), "{0:+,.0f}".format(int(data1['count_rank_a']) - int(data2['count_rank_a'])) )
+			]
+			for to_msg in to_r:
+				yield from client.send_message(message.channel, to_msg)
+		elif(params[0]=='bestof'):
+			if len(params)<2:
+				yield from client.send_message(message.channel, "'bestof' requires a name parameter (only)")
+				return
+			if len(params)==3:
+				if int(params[2])>10:
+					yield from client.send_message(message.channel, "'You may only view up to 10 'bestof' beatmaps")
+					return
+			name_input = params[1]
+			url = 'https://osu.ppy.sh/api/get_user_best'
+			params = dict(
+				k=get_osu_key(),
+				u=name_input,
+				limit=(5 if len(params)==2 else int(params[2]))
+			)
+			resp = requests.get(url=url, params=params)
+			print(resp.status_code)
+			if resp.status_code != 200:
+				yield from client.send_message(message.channel, "An error occured finding **{0}**!".format( name_input ))
+				return
+			data = json.loads(resp.text)
+			yield from client.send_message(message.channel, "Viewing the Best Scores of **{}**".format(name_input))
+			for i in data:
+				url = 'https://osu.ppy.sh/api/get_beatmaps'
+				params = dict(
+					k=get_osu_key(),
+					b=i['beatmap_id']
+				)
+				beatmap_resp = requests.get(url=url, params=params)
+				if beatmap_resp.status_code != 200:
+					yield from client.send_message(message.channel, "An error occured loading beatmap information")
+					return
+				beatmap_data = json.loads(beatmap_resp.text)
+				#print(beatmap_data)
+				beatmap_name = beatmap_data[0]['title']
+				beatmap_len = int(beatmap_data[0]['total_length'])
+				beatmap_ver = beatmap_data[0]['version']
+				yield from client.send_message(message.channel, 
+					"**{}** (*{}, {} stars*): Rank {} {} {} ({}x combo) ({}x miss) +{}pp".format(beatmap_name, 
+																		  "%d:%02dm"%(beatmap_len/60, beatmap_len%60), 
+																		  "{0:,.1f}".format(float(beatmap_data[0]['difficultyrating'])),
+																		  "**{}**".format(i['rank']) if i['rank'] in ['A','S', 'SH', 'SS'] else i['rank'],
+																		  "*(FC)*" if i['perfect']=="1" else "",
+																		  "{0:,.0f}".format(int(i['score'])),
+																		  "**{}**".format(i['maxcombo']) if int(i['maxcombo']) > int(beatmap_data[0]['max_combo'])*3/4 else i['maxcombo'],
+																		  i['countmiss'],
+																		  "{0:,.1f}".format(float(i['pp']))
+																		  ))
+		elif(params[0]=='recent'):
+			if len(params)<2:
+				yield from client.send_message(message.channel, "'bestof' requires a name parameter (only)")
+				return
+			if len(params)==3:
+				if int(params[2])>10:
+					yield from client.send_message(message.channel, "'You may only view up to 10 'bestof' beatmaps")
+					return
+			name_input = params[1]
+			url = 'https://osu.ppy.sh/api/get_user_recent'
+			params = dict(
+				k=get_osu_key(),
+				u=name_input,
+				limit=(5 if len(params)==2 else int(params[2]))
+			)
+			resp = requests.get(url=url, params=params)
+			print(resp.status_code)
+			if resp.status_code != 200:
+				yield from client.send_message(message.channel, "An error occured finding **{0}**!".format( name_input ))
+				return
+			data = json.loads(resp.text)
+			yield from client.send_message(message.channel, "Viewing the Recently Played of **{}**".format(name_input))
+			for i in data:
+				url = 'https://osu.ppy.sh/api/get_beatmaps'
+				params = dict(
+					k=get_osu_key(),
+					b=i['beatmap_id']
+				)
+				beatmap_resp = requests.get(url=url, params=params)
+				if beatmap_resp.status_code != 200:
+					yield from client.send_message(message.channel, "An error occured loading beatmap information")
+					return
+				beatmap_data = json.loads(beatmap_resp.text)
+				#print(beatmap_data)
+				beatmap_name = beatmap_data[0]['title']
+				beatmap_len = int(beatmap_data[0]['total_length'])
+				beatmap_ver = beatmap_data[0]['version']
+				yield from client.send_message(message.channel, 
+					"**{}** (*{}, {} stars*): {} {} {} ({}x combo) ({}x miss)".format(beatmap_name, 
+																		  "%d:%02dm"%(beatmap_len/60, beatmap_len%60), 
+																		  "{0:,.1f}".format(float(beatmap_data[0]['difficultyrating'])),
+																		  "Rank **{}**".format(i['rank']) if i['rank'] in ['A','S', 'SH', 'SS'] else ("Rank {}".format(i['rank']) if i['rank']!='F' else "**FAILED**"),
+																		  "*(FC)*" if i['perfect']=="1" else "",
+																		  "{0:,.0f}".format(int(i['score'])),
+																		  "**{}**".format(i['maxcombo']) if int(i['maxcombo']) > int(beatmap_data[0]['max_combo'])*3/4 else i['maxcombo'],
+																		  i['countmiss'],
+																		  ))
+
+	#TO-DO: add an !addgame command to add the game privileges
+	elif message.content == "!addgame":
+		games = {'League of Legends': 'LoL', 'Counter Strike: Global Offensive': 'CS:GO', 'World of Warcraft': 'WoW', 'osu!': 'osu!'}
+		if message.author.game.name in games:
+			yield from client.add_roles(message.author, [x for x in client.servers[0].roles if x.name==games[message.author.game.name]][0])
+			yield from client.send_message(message.channel, "Added role **{0}** to user **{1}**".format(games[message.author.game.name], message.author.name))
+			return
+		else:
+			yield from client.send_message(message.channel, "**!addgame** supported games: World of Warcraft, League of Legends, Counter Strike: Global Offensive, osu!")
+			return
 
 	elif message.content == "!tokens":
 		yield from client.send_message(message.channel, "**Vanquisher** - Rogue, Death Knight, Mage, Druid")
@@ -346,7 +545,7 @@ def on_message(message):
 					return
 				op = lambda: {0: '+', 1: '-', 2: '*', 3: '/'}[random.randrange(4)]
 				eq = (''.join([op()+str(x) for x in random.sample( range(1, 10 if len(params)<3 else int(params[2]) ), int(params[1]) )]))[1:]
-				yield from client.send_message(message.channel, "Equation:\n(Please note that the end result is rounded down, so `1/3*2 = 2`)\n ```\n{0}```".format(eq))
+				yield from client.send_message(message.channel, "Equation:\n(Please note that the end result is rounded down, so `1/3*2 = 0`)\n ```\n{0}```".format(eq))
 				guess = yield from client.wait_for_message(timeout=(5.0 if len(params)<4 else int(params[3])), author=message.author)
 				if guess is None:
 					yield from client.send_message(message.channel, "Time has run out! The correct answer was {0}".format(int(eval(eq))))
@@ -540,6 +739,24 @@ def get_love_yous():
 	fo.close()
 	return data
 
+def build_up():
+	num = builds()
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "w+")
+	fo.write(str(num+1))
+	fo.close()
+
+def builds():
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/buildcount.txt", "r")
+	data = int(fo.read())
+	fo.close()
+	return data
+
+def admins():
+	fo = open("C:/Users/Dylan/Documents/discord botts/test1/data/admins.txt", "r")
+	data = fo.read().split('|')
+	fo.close()
+	return data
+
 def pbot_mmo_stats(name):
 	return [(l[:-1] if ('\n' in l) else l) for l in open("C:/Users/Dylan/Documents/discord botts/test1/mmo/{0}.dat".format(name)).readlines()]
 
@@ -560,7 +777,25 @@ def item_database():
 	with open("C:/Users/Dylan/Documents/discord botts/test1/mmo/db/itemDB.db") as f:
 		return eval(f.read())
 
+def get_osu_user_info(name):
+	url = 'https://osu.ppy.sh/api/get_user'
+	params = dict(
+		k=get_osu_key(),
+		u=name
+	)
+	resp = requests.get(url=url, params=params)
+	print(resp.status_code)
+	if resp.status_code != 200:
+		yield from client.send_message(message.channel, "An error occured finding **{0}**!".format( name_input ))
+		return
+	data = json.loads(resp.text)
+
+	return {c:data[0][c] for c in data[0]}#data[0]
+
  # # # LOGIN # # #
+
+def get_osu_key():
+	return open("C:/Users/Dylan/Documents/discord botts/test1/osukey.txt", "r").read()
 
 def get_login():
 	fo = open("C:/Users/Dylan/Documents/discord botts/test1/login.txt", "r+")
