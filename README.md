@@ -1,5 +1,9 @@
 # Priestism Bot
 
+## IMPORTANT!
+
+**This project has been discontinued in favor of the rewritten version: enragedrobo**. You can see that project by clicking [HERE](https://github.com/enragednuke/enragedrobo). It is leaps and bounds more superior in every regard than the code developed here.
+
 A bot designed solely for the purpose of my own Discord server. If you wish to use this, there will be a **lot** of things you'll need to modify.
 
 The first versions of this bot (up to 0.3.X or so) was created within a few days of learning Python. Anything prior to a public version (1.0.0) will be amateur-style coding that I write while learning conventions and efficiency maximization. There may (*will*) be inefficient code here, but as I learn the language more, I plan to fix the inefficiencies and further improve my code in the future. Some of the basic stuff you must do are as following:
